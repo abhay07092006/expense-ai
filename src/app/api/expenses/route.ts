@@ -14,10 +14,8 @@ async function getUser() {
   });
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// GET ALL EXPENSES
+export async function GET() {
   try {
     const user = await getUser();
 
@@ -28,13 +26,39 @@ export async function PUT(
       );
     }
 
-    const { id } = await params;
+    const expenses = await prisma.expense.findMany({
+      where: {
+        userId: user.id,
+      },
+      orderBy: {
+        date: "desc",
+      },
+    });
+
+    return NextResponse.json(expenses);
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to fetch expenses" },
+      { status: 500 }
+    );
+  }
+}
+
+// CREATE EXPENSE
+export async function POST(req: NextRequest) {
+  try {
+    const user = await getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
 
-    const expense = await prisma.expense.update({
-      where: {
-        id,
-      },
+    const expense = await prisma.expense.create({
       data: {
         title: body.title,
         amount: body.amount,
@@ -42,47 +66,16 @@ export async function PUT(
         payment: body.payment,
         date: new Date(body.date),
         notes: body.notes,
+        userId: user.id,
       },
     });
 
     return NextResponse.json(expense);
   } catch {
     return NextResponse.json(
-      { error: "Update failed" },
+      { error: "Failed to create expense" },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const user = await getUser();
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const { id } = await params;
-
-    await prisma.expense.delete({
-      where: {
-        id,
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-    });
-  } catch {
-    return NextResponse.json(
-      { error: "Delete failed" },
-      { status: 500 }
-    );
-  }
-}
