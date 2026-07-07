@@ -209,7 +209,7 @@ export default function SettingsPage() {
           </div>
 
           <UserButton
-            afterSignOutUrl="/"
+            
           />
         </div>
 
