@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   Wallet,
@@ -11,6 +12,8 @@ import {
   Settings,
   User,
   LogOut,
+  Sparkles,
+  TrendingUp
 } from "lucide-react";
 
 const menu = [
@@ -24,6 +27,11 @@ const menu = [
     icon: Wallet,
     href: "/expenses",
   },
+  {
+  title: "Income",
+  icon: TrendingUp,
+  href: "/income",
+},
   {
     title: "Analytics",
     icon: BarChart3,
@@ -50,51 +58,112 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-screen w-64 flex-col justify-between border-r border-slate-800 bg-slate-950">
-      <div>
-        <div className="border-b border-slate-800 p-8">
-          <h1 className="text-3xl font-bold text-white">
-            ExpenseAI
-          </h1>
+    <aside className="sticky top-0 flex h-screen w-72 flex-col justify-between border-r border-white/10 bg-slate-950/70 backdrop-blur-xl">
 
-          <p className="mt-2 text-sm text-slate-400">
-            Personal Finance
-          </p>
+      <div>
+
+        <div className="border-b border-white/10 p-8">
+
+          <div className="flex items-center gap-3">
+
+            <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-3">
+              <Sparkles className="text-white" />
+            </div>
+
+            <div>
+
+              <h1 className="bg-gradient-to-r from-white via-blue-300 to-cyan-400 bg-clip-text text-3xl font-bold text-transparent">
+                ExpenseAI
+              </h1>
+
+              <p className="text-sm text-slate-400">
+                AI Powered Finance
+              </p>
+
+            </div>
+
+          </div>
+
         </div>
 
-        <nav className="mt-8 px-4">
+        <nav className="mt-8 space-y-2 px-4">
+
           {menu.map((item) => {
-            const isActive = pathname === item.href;
+
+            const active = pathname === item.href;
 
             return (
-              <Link
+
+              <motion.div
                 key={item.title}
-                href={item.href}
-                className={`mb-2 flex items-center gap-4 rounded-xl px-4 py-3 transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                    : "text-slate-400 hover:bg-slate-900 hover:text-white"
-                }`}
+                whileHover={{
+                  x: 8,
+                }}
               >
-                <item.icon size={20} />
-                <span>{item.title}</span>
-              </Link>
+
+                <Link
+                  href={item.href}
+                  className={`flex items-center gap-4 rounded-2xl px-5 py-4 transition-all duration-300 ${
+                    active
+                      ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-xl shadow-blue-500/30"
+                      : "text-slate-400 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+
+                  <item.icon size={22} />
+
+                  <span className="font-medium">
+                    {item.title}
+                  </span>
+
+                </Link>
+
+              </motion.div>
+
             );
           })}
+
         </nav>
+
       </div>
 
-      <div className="border-t border-slate-800 p-4">
-        <button className="mb-2 flex w-full items-center gap-4 rounded-xl px-4 py-3 text-slate-400 transition hover:bg-slate-900 hover:text-white">
-          <User size={20} />
-          Profile
-        </button>
+      <div className="border-t border-white/10 p-5">
 
-        <button className="flex w-full items-center gap-4 rounded-xl px-4 py-3 text-red-400 transition hover:bg-red-500/10">
-          <LogOut size={20} />
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          className="mb-3 flex w-full items-center gap-4 rounded-2xl bg-white/5 px-5 py-4 text-slate-300 transition"
+        >
+
+          <User className="text-blue-400" />
+
+          <div className="text-left">
+
+            <p className="font-semibold">
+              Abhay Singh
+            </p>
+
+            <p className="text-xs text-slate-500">
+              Premium Member
+            </p>
+
+          </div>
+
+        </motion.button>
+
+        <motion.button
+          whileHover={{
+            scale: 1.03,
+          }}
+          className="flex w-full items-center gap-4 rounded-2xl bg-red-500/10 px-5 py-4 text-red-400"
+        >
+          <LogOut />
+
           Logout
-        </button>
+
+        </motion.button>
+
       </div>
+
     </aside>
   );
 }

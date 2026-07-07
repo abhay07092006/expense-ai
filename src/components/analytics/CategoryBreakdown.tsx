@@ -1,6 +1,8 @@
 "use client";
 
+import { DateFilter } from "@/hooks/useExpenseStats";
 import { useExpense } from "@/hooks/useExpense";
+
 import {
   PieChart,
   Pie,
@@ -8,6 +10,10 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+
+interface Props {
+  filter: DateFilter;
+}
 
 const COLORS = [
   "#3b82f6",
@@ -19,12 +25,69 @@ const COLORS = [
   "#06b6d4",
 ];
 
-export default function CategoryBreakdown() {
+export default function CategoryBreakdown({
+  filter,
+}: Props) {
   const { expenses } = useExpense();
+
+  const now = new Date();
+
+  function isInRange(dateString: string) {
+    const date = new Date(dateString);
+
+    switch (filter) {
+      case "today":
+        return (
+          date.getDate() === now.getDate() &&
+          date.getMonth() === now.getMonth() &&
+          date.getFullYear() === now.getFullYear()
+        );
+
+      case "week": {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 6);
+
+        return date >= weekAgo && date <= now;
+      }
+
+      case "month":
+        return (
+          date.getMonth() === now.getMonth() &&
+          date.getFullYear() === now.getFullYear()
+        );
+
+      case "lastMonth": {
+        const month =
+          now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+
+        const year =
+          now.getMonth() === 0
+            ? now.getFullYear() - 1
+            : now.getFullYear();
+
+        return (
+          date.getMonth() === month &&
+          date.getFullYear() === year
+        );
+      }
+
+      case "year":
+        return (
+          date.getFullYear() === now.getFullYear()
+        );
+
+      default:
+        return true;
+    }
+  }
+
+  const filteredExpenses = expenses.filter((expense) =>
+    isInRange(expense.date)
+  );
 
   const categoryTotals: Record<string, number> = {};
 
-  expenses.forEach((expense) => {
+  filteredExpenses.forEach((expense) => {
     categoryTotals[expense.category] =
       (categoryTotals[expense.category] || 0) +
       expense.amount;
@@ -37,7 +100,10 @@ export default function CategoryBreakdown() {
     }))
     .sort((a, b) => b.value - a.value);
 
-  const total = data.reduce((sum, item) => sum + item.value, 0);
+  const total = data.reduce(
+    (sum, item) => sum + item.value,
+    0
+  );
 
   if (data.length === 0) {
     return (
@@ -60,12 +126,12 @@ export default function CategoryBreakdown() {
         Category Breakdown
       </h2>
 
-      {/* Doughnut */}
-
       <div className="mx-auto h-64 w-64">
 
-        <ResponsiveContainer width="100%" height="100%">
-
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+        >
           <PieChart>
 
             <Pie
@@ -78,35 +144,41 @@ export default function CategoryBreakdown() {
               {data.map((_, index) => (
                 <Cell
                   key={index}
-                  fill={COLORS[index % COLORS.length]}
+                  fill={
+                    COLORS[
+                      index %
+                        COLORS.length
+                    ]
+                  }
                 />
               ))}
             </Pie>
 
             <Tooltip
-              formatter={(value: number) => [
-                `₹${value.toLocaleString()}`,
+              formatter={(value) => [
+                `₹${Number(
+                  value
+                ).toLocaleString()}`,
                 "Amount",
               ]}
               contentStyle={{
-                backgroundColor: "#0f172a",
-                border: "1px solid #334155",
-                borderRadius: "10px",
+                backgroundColor:
+                  "#0f172a",
+                border:
+                  "1px solid #334155",
+                borderRadius:
+                  "10px",
               }}
             />
 
           </PieChart>
-
         </ResponsiveContainer>
 
       </div>
 
-      {/* Category List */}
-
       <div className="mt-8 space-y-5">
 
         {data.map((item, index) => {
-
           const percent =
             (item.value / total) * 100;
 
@@ -121,7 +193,10 @@ export default function CategoryBreakdown() {
                     className="h-3.5 w-3.5 rounded-full"
                     style={{
                       backgroundColor:
-                        COLORS[index % COLORS.length],
+                        COLORS[
+                          index %
+                            COLORS.length
+                        ],
                     }}
                   />
 
@@ -144,7 +219,10 @@ export default function CategoryBreakdown() {
                   style={{
                     width: `${percent}%`,
                     backgroundColor:
-                      COLORS[index % COLORS.length],
+                      COLORS[
+                        index %
+                          COLORS.length
+                      ],
                   }}
                 />
 

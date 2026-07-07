@@ -1,25 +1,87 @@
 "use client";
 
+import { DateFilter } from "@/hooks/useExpenseStats";
 import { useExpense } from "@/hooks/useExpense";
 
-export default function AIInsights() {
+interface Props {
+  filter: DateFilter;
+}
+
+export default function AIInsights({
+  filter,
+}: Props) {
   const { expenses } = useExpense();
 
-  const total = expenses.reduce(
+  const now = new Date();
+
+  function isInRange(dateString: string) {
+    const date = new Date(dateString);
+
+    switch (filter) {
+      case "today":
+        return (
+          date.getDate() === now.getDate() &&
+          date.getMonth() === now.getMonth() &&
+          date.getFullYear() === now.getFullYear()
+        );
+
+      case "week": {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 6);
+
+        return date >= weekAgo && date <= now;
+      }
+
+      case "month":
+        return (
+          date.getMonth() === now.getMonth() &&
+          date.getFullYear() === now.getFullYear()
+        );
+
+      case "lastMonth": {
+        const month =
+          now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+
+        const year =
+          now.getMonth() === 0
+            ? now.getFullYear() - 1
+            : now.getFullYear();
+
+        return (
+          date.getMonth() === month &&
+          date.getFullYear() === year
+        );
+      }
+
+      case "year":
+        return (
+          date.getFullYear() === now.getFullYear()
+        );
+
+      default:
+        return true;
+    }
+  }
+
+  const filteredExpenses = expenses.filter((expense) =>
+    isInRange(expense.date)
+  );
+
+  const total = filteredExpenses.reduce(
     (sum, e) => sum + e.amount,
     0
   );
 
   const highest =
-    expenses.length > 0
-      ? [...expenses].sort(
+    filteredExpenses.length > 0
+      ? [...filteredExpenses].sort(
           (a, b) => b.amount - a.amount
         )[0]
       : null;
 
   const categories: Record<string, number> = {};
 
-  expenses.forEach((expense) => {
+  filteredExpenses.forEach((expense) => {
     categories[expense.category] =
       (categories[expense.category] || 0) +
       expense.amount;
@@ -56,7 +118,7 @@ export default function AIInsights() {
 
           <h3 className="mt-2 text-xl font-bold text-red-400">
             {highest
-              ? `${highest.title} (₹${highest.amount})`
+              ? `${highest.title} (₹${highest.amount.toLocaleString()})`
               : "-"}
           </h3>
         </div>
@@ -80,7 +142,7 @@ export default function AIInsights() {
         <span className="font-semibold">
           {topCategory?.[0] ?? "N/A"}
         </span>
-        . Consider setting a monthly budget for this category to improve savings.
+        . Consider setting a monthly budget for this category to improve your savings.
       </div>
 
     </div>

@@ -1,6 +1,6 @@
-
 "use client";
 
+import { DateFilter } from "@/hooks/useExpenseStats";
 import { useExpense } from "@/hooks/useExpense";
 
 import {
@@ -13,8 +13,79 @@ import {
   YAxis,
 } from "recharts";
 
-export default function MonthlyTrendChart() {
+interface Props {
+  filter: DateFilter;
+}
+
+export default function MonthlyTrendChart({
+  filter,
+}: Props) {
   const { expenses } = useExpense();
+
+  const now = new Date();
+
+  function isInRange(dateString: string) {
+    const date = new Date(dateString);
+
+    switch (filter) {
+      case "today":
+        return (
+          date.getDate() === now.getDate() &&
+          date.getMonth() === now.getMonth() &&
+          date.getFullYear() ===
+            now.getFullYear()
+        );
+
+      case "week": {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 6);
+
+        return (
+          date >= weekAgo &&
+          date <= now
+        );
+      }
+
+      case "month":
+        return (
+          date.getMonth() ===
+            now.getMonth() &&
+          date.getFullYear() ===
+            now.getFullYear()
+        );
+
+      case "lastMonth": {
+        const month =
+          now.getMonth() === 0
+            ? 11
+            : now.getMonth() - 1;
+
+        const year =
+          now.getMonth() === 0
+            ? now.getFullYear() - 1
+            : now.getFullYear();
+
+        return (
+          date.getMonth() === month &&
+          date.getFullYear() === year
+        );
+      }
+
+      case "year":
+        return (
+          date.getFullYear() ===
+          now.getFullYear()
+        );
+
+      default:
+        return true;
+    }
+  }
+
+  const filteredExpenses =
+    expenses.filter((expense) =>
+      isInRange(expense.date)
+    );
 
   const months = [
     "Jan",
@@ -31,19 +102,32 @@ export default function MonthlyTrendChart() {
     "Dec",
   ];
 
-  const chartData = months.map((month, index) => {
-    const total = expenses
-      .filter((expense) => {
-        const date = new Date(expense.date);
-        return date.getMonth() === index;
-      })
-      .reduce((sum, expense) => sum + expense.amount, 0);
+  const chartData = months.map(
+    (month, index) => {
+      const total =
+        filteredExpenses
+          .filter((expense) => {
+            const date = new Date(
+              expense.date
+            );
 
-    return {
-      month,
-      expense: total,
-    };
-  });
+            return (
+              date.getMonth() ===
+              index
+            );
+          })
+          .reduce(
+            (sum, expense) =>
+              sum + expense.amount,
+            0
+          );
+
+      return {
+        month,
+        expense: total,
+      };
+    }
+  );
 
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
@@ -58,9 +142,9 @@ export default function MonthlyTrendChart() {
           width="100%"
           height="100%"
         >
-
-          <LineChart data={chartData}>
-
+          <LineChart
+            data={chartData}
+          >
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="#1e293b"
@@ -76,9 +160,17 @@ export default function MonthlyTrendChart() {
             />
 
             <Tooltip
+              formatter={(value) => [
+                `₹${Number(
+                  value
+                ).toLocaleString()}`,
+                "Expense",
+              ]}
               contentStyle={{
-                backgroundColor: "#0f172a",
-                border: "1px solid #334155",
+                backgroundColor:
+                  "#0f172a",
+                border:
+                  "1px solid #334155",
                 borderRadius: "12px",
               }}
             />
@@ -88,13 +180,10 @@ export default function MonthlyTrendChart() {
               dataKey="expense"
               stroke="#3b82f6"
               strokeWidth={4}
-              dot={{
-                r: 5,
-              }}
+              dot={{ r: 5 }}
             />
 
           </LineChart>
-
         </ResponsiveContainer>
 
       </div>

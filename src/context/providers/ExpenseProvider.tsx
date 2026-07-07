@@ -1,32 +1,9 @@
 "use client";
 
-import { ReactNode, useState } from "react";
-import { v4 as uuid } from "uuid";
+import { ReactNode, useEffect, useState } from "react";
 
 import { Expense } from "@/types/expense";
 import { ExpenseContext } from "../ExpenseContext";
-import { useEffect } from "react";
-
-const initialExpenses: Expense[] = [
-  {
-    id: uuid(),
-    title: "Netflix",
-    amount: 649,
-    category: "Entertainment",
-    payment: "UPI",
-    date: "2026-06-20",
-    notes: "",
-  },
-  {
-    id: uuid(),
-    title: "Swiggy",
-    amount: 430,
-    category: "Food",
-    payment: "UPI",
-    date: "2026-06-19",
-    notes: "",
-  },
-];
 
 export default function ExpenseProvider({
   children,
@@ -51,60 +28,72 @@ export default function ExpenseProvider({
   const [paymentFilter, setPaymentFilter] =
     useState("All");
 
+  // Load Expenses
+  async function loadExpenses() {
+    const res = await fetch("/api/expenses");
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    setExpenses(data);
+  }
+
+  useEffect(() => {
+    void loadExpenses();
+  }, []);
+
+  // Add Expense
   const addExpense = async (
-  expense: Omit<Expense, "id">
-) => {
-  const res = await fetch("/api/expenses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(expense),
-  });
+    expense: Omit<Expense, "id">
+  ) => {
+    const res = await fetch("/api/expenses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(expense),
+    });
 
-  if (!res.ok) return;
+    if (!res.ok) return;
 
-  await loadExpenses();
-};
+    await loadExpenses();
+  };
 
-  const deleteExpense = async (id: string) => {
-  const res = await fetch(`/api/expenses/${id}`, {
-    method: "DELETE",
-  });
-
-  if (!res.ok) return;
-
-  await loadExpenses();
-};
-
+  // Update Expense
   const updateExpense = async (
-  expense: Expense
-) => {
-  const res = await fetch(`/api/expenses/${expense.id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(expense),
-  });
+    expense: Expense
+  ) => {
+    const res = await fetch(
+      `/api/expenses/${expense.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(expense),
+      }
+    );
 
-  if (!res.ok) return;
+    if (!res.ok) return;
 
-  await loadExpenses();
-};
-useEffect(() => {
-  loadExpenses();
-}, []);
+    await loadExpenses();
+  };
 
-async function loadExpenses() {
-  const res = await fetch("/api/expenses");
+  // Delete Expense
+  const deleteExpense = async (id: string) => {
+    const res = await fetch(
+      `/api/expenses/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
 
-  if (!res.ok) return;
+    if (!res.ok) return;
 
-  const data = await res.json();
+    await loadExpenses();
+  };
 
-  setExpenses(data);
-}
   return (
     <ExpenseContext.Provider
       value={{

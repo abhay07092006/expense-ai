@@ -1,5 +1,7 @@
+"use client";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { useExpenseStats } from "@/hooks/useExpenseStats";
 import {
   Wallet,
   CreditCard,
@@ -7,34 +9,43 @@ import {
   Receipt,
 } from "lucide-react";
 
-const stats = [
-  {
-    title: "Total Expenses",
-    value: "₹35,500",
-    icon: Wallet,
-    color: "text-red-500",
-  },
-  {
-    title: "This Month",
-    value: "₹18,200",
-    icon: CreditCard,
-    color: "text-blue-500",
-  },
-  {
-    title: "Average / Day",
-    value: "₹607",
-    icon: TrendingDown,
-    color: "text-yellow-500",
-  },
-  {
-    title: "Transactions",
-    value: "124",
-    icon: Receipt,
-    color: "text-green-500",
-  },
-];
-
 export default function ExpenseStats() {
+  const {
+    totalExpenses,
+    monthlyExpenses,
+    totalTransactions,
+    averagePerTransaction,
+  } = useExpenseStats();
+
+  const stats = [
+    {
+      title: "Total Expenses",
+      value: `₹${totalExpenses.toLocaleString()}`,
+      icon: Wallet,
+      color: "text-red-500",
+    },
+    {
+      title: "This Month",
+      value: `₹${monthlyExpenses.toLocaleString()}`,
+      icon: CreditCard,
+      color: "text-blue-500",
+    },
+    {
+      title: "Average / Expense",
+      value: `₹${Math.round(
+        averagePerTransaction
+      ).toLocaleString()}`,
+      icon: TrendingDown,
+      color: "text-yellow-500",
+    },
+    {
+      title: "Transactions",
+      value: totalTransactions.toString(),
+      icon: Receipt,
+      color: "text-green-500",
+    },
+  ];
+
   return (
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
       {stats.map((item) => (

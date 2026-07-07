@@ -1,6 +1,8 @@
 "use client";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { useExpenseStats } from "@/hooks/useExpenseStats";
+import { motion } from "framer-motion";
 import {
   Wallet,
   TrendingDown,
@@ -11,12 +13,19 @@ import {
 export default function DashboardCards() {
   const {
     totalExpenses,
-    monthlyExpenses,
     totalTransactions,
-    averagePerTransaction,
+    totalIncome,
+    balance,
+    totalIncomeTransactions,
   } = useExpenseStats();
 
   const cards = [
+    {
+      title: "Total Income",
+      value: `₹${totalIncome.toLocaleString()}`,
+      icon: TrendingUp,
+      color: "text-green-500",
+    },
     {
       title: "Total Expenses",
       value: `₹${totalExpenses.toLocaleString()}`,
@@ -24,50 +33,59 @@ export default function DashboardCards() {
       color: "text-red-500",
     },
     {
-      title: "This Month",
-      value: `₹${monthlyExpenses.toLocaleString()}`,
+      title: "Balance",
+      value: `₹${balance.toLocaleString()}`,
       icon: Wallet,
-      color: "text-blue-500",
-    },
-    {
-      title: "Average / Transaction",
-      value: `₹${Math.round(
-        averagePerTransaction
-      ).toLocaleString()}`,
-      icon: TrendingUp,
-      color: "text-yellow-500",
+      color:
+        balance >= 0
+          ? "text-blue-500"
+          : "text-red-500",
     },
     {
       title: "Transactions",
-      value: totalTransactions.toString(),
+      value: (
+        totalTransactions +
+        totalIncomeTransactions
+      ).toString(),
       icon: PiggyBank,
-      color: "text-green-500",
+      color: "text-yellow-500",
     },
   ];
 
   return (
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-      {cards.map((card) => (
-        <Card
+      {cards.map((card, index) => (
+        <motion.div
           key={card.title}
-          className="border-slate-800 bg-slate-900"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.4,
+            delay: index * 0.1,
+          }}
+          whileHover={{
+            y: -5,
+            scale: 1.02,
+          }}
         >
-          <CardContent className="flex items-center justify-between p-6">
-            <div>
-              <p className="text-sm text-slate-400">
-                {card.title}
-              </p>
+          <Card className="border border-slate-800 bg-white/5 backdrop-blur-xl">
+            <CardContent className="flex items-center justify-between p-6">
+              <div>
+                <p className="text-sm text-slate-400">
+                  {card.title}
+                </p>
 
-              <h2 className="mt-2 text-3xl font-bold text-white">
-                {card.value}
-              </h2>
-            </div>
+                <h2 className="mt-2 text-3xl font-bold text-white">
+                  {card.value}
+                </h2>
+              </div>
 
-            <card.icon
-              className={`h-10 w-10 ${card.color}`}
-            />
-          </CardContent>
-        </Card>
+              <card.icon
+                className={`h-10 w-10 ${card.color}`}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
       ))}
     </div>
   );
