@@ -1,6 +1,7 @@
 import { createContext } from "react";
 import { Expense } from "@/types/expense";
 
+
 export interface ExpenseContextType {
   expenses: Expense[];
 

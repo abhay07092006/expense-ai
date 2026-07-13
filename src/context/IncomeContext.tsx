@@ -6,6 +6,7 @@ import {
   useState,
   ReactNode,
 } from "react";
+import { useAuth } from "@clerk/nextjs";
 
 export interface Income {
   id: string;
@@ -31,13 +32,18 @@ export default function IncomeProvider({
 }: {
   children: ReactNode;
 }) {
-  const [incomes, setIncomes] = useState<
-    Income[]
-  >([]);
+  const { isLoaded, isSignedIn } = useAuth();
+
+  const [incomes, setIncomes] = useState<Income[]>([]);
 
   async function fetchIncome() {
     try {
       const res = await fetch("/api/income");
+
+      if (res.status === 401) {
+        setIncomes([]);
+        return;
+      }
 
       if (!res.ok) {
         console.error(
@@ -49,7 +55,6 @@ export default function IncomeProvider({
       }
 
       const data = await res.json();
-
       setIncomes(data);
     } catch (error) {
       console.error(
@@ -61,8 +66,15 @@ export default function IncomeProvider({
   }
 
   useEffect(() => {
-    fetchIncome();
-  }, []);
+    if (!isLoaded) return;
+
+    if (!isSignedIn) {
+      setIncomes([]);
+      return;
+    }
+
+    void fetchIncome();
+  }, [isLoaded, isSignedIn]);
 
   return (
     <IncomeContext.Provider

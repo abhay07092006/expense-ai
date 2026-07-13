@@ -1,15 +1,18 @@
 "use client";
 
 import { ReactNode, useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 
 import { Expense } from "@/types/expense";
 import { ExpenseContext } from "../ExpenseContext";
+import { useAuth } from "@clerk/nextjs";
 
 export default function ExpenseProvider({
   children,
 }: {
   children: ReactNode;
 }) {
+  const { isLoaded, isSignedIn } = useUser();
   const [expenses, setExpenses] = useState<Expense[]>([]);
 
   const [selectedExpense, setSelectedExpense] =
@@ -30,18 +33,26 @@ export default function ExpenseProvider({
 
   // Load Expenses
   async function loadExpenses() {
+  try {
     const res = await fetch("/api/expenses");
 
-    if (!res.ok) return;
+    if (!res.ok) {
+      setExpenses([]);
+      return;
+    }
 
     const data = await res.json();
-
     setExpenses(data);
+  } catch (error) {
+    console.error(error);
+    setExpenses([]);
   }
+}
 
   useEffect(() => {
-    void loadExpenses();
-  }, []);
+  if (!isLoaded || !isSignedIn) return;
+  void loadExpenses();
+}, [isLoaded, isSignedIn]);
 
   // Add Expense
   const addExpense = async (
