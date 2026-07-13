@@ -6,7 +6,6 @@ export async function getUser() {
 
   if (!userId) return null;
 
-  // First check Clerk ID
   let user = await prisma.user.findUnique({
     where: {
       clerkId: userId,
@@ -21,30 +20,18 @@ export async function getUser() {
 
   const email = clerkUser.emailAddresses[0].emailAddress;
 
-  // Check if email already exists
-  user = await prisma.user.findUnique({
-    where: {
-      email,
-    },
-  });
-
-  // Link existing account with Clerk ID
-  if (user) {
-    return await prisma.user.update({
-      where: {
-        id: user.id,
-      },
+  try {
+    return await prisma.user.create({
       data: {
         clerkId: userId,
+        email,
+      },
+    });
+  } catch {
+    return await prisma.user.findUnique({
+      where: {
+        email,
       },
     });
   }
-
-  // Create new user
-  return await prisma.user.create({
-    data: {
-      clerkId: userId,
-      email,
-    },
-  });
 }
