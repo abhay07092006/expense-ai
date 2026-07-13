@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+
 import { prisma } from "@/lib/prisma";
 
-async function getUser() {
-  const { userId } = await auth();
-
-  if (!userId) return null;
-
-  return prisma.user.findUnique({
-    where: {
-      clerkId: userId,
-    },
-  });
-}
+import { getUser } from "@/lib/getUser";
 
 // GET Current Month Budget
 export async function GET() {
